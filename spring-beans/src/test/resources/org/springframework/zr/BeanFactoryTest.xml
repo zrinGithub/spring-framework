@@ -9,4 +9,6 @@
 	<bean id="bean2" class="org.springframework.zr.MyBean2">
 		<property name="myBean" ref="bean"/>
 	</bean>
+
+	<bean id="fb" class="org.springframework.zr.MyBeanFactory"/>
 </beans>
