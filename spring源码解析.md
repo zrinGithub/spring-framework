@@ -381,3 +381,20 @@ BeanDefinitionParserDelegate.**parseBeanDefinitionElement**()
 取出id、name
 
 使用GenericBeanDefinition解析其他属性统一封装
+
+
+
+## 内部属性说明：
+
+
+
+**singletonFactories**
+
+用于存储在spring内部所使用的beanName->对象工厂的引用，一旦最终对象被创建(通过objectFactory.getObject())，此引用信息将删除
+
+
+
+**earlySingletonObjects**
+
+用于存储在创建Bean早期对创建的原始bean的一个引用，注意这里是原始bean，即使用工厂方法或构造方法创建出来的对象，一旦对象最终创建好，此引用信息将删除
+
