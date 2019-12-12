@@ -576,7 +576,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// even when triggered by lifecycle interfaces like BeanFactoryAware.
 		//这里的allowCircularReferences可以使用setAllowCircularReferences(false）来禁用循环引用
 		//earlySingletonExposure是否需要提前曝光
-		//判断条件：需要单例 + 允许循环依赖处理 + 是否在singletonsCurrentlyInCreation中，也就是正在创建的单例
+		//判断条件：需要单例 + 允许循环依赖处理 +
+		// 是否在singletonsCurrentlyInCreation中，也就是正在创建的单例,
+		// 这个量在DefaultSingletonBeanRegistry.getSingleton中beforeSingletonCreation和afterSingletonCreation
+		// 进行添加和移除
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
 		if (earlySingletonExposure) {
@@ -586,6 +589,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 			//为了避免后期的循环依赖，在bean初始化完成前先将创建实例的ObjectFactory加入到singletonFactories（一旦对象创建完成后，会被清除）
 			/**
+			 * 这里的factory的实现知识进行aop处理，没有进行属性填充，所以在处理循环依赖的时候，实际上拿到的是一个没有填充的factory
 			 * synchronized (this.singletonObjects) {
 			 * 			if (!this.singletonObjects.containsKey(beanName)) {
 			 * 				this.singletonFactories.put(beanName, singletonFactory);
@@ -1133,10 +1137,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		Supplier<?> instanceSupplier = mbd.getInstanceSupplier();
+		//如果supply不为空就直接初始化返回
 		if (instanceSupplier != null) {
 			return obtainFromSupplier(instanceSupplier, beanName);
 		}
-
+		//如果工厂方法不为空就直接初始化返回
 		if (mbd.getFactoryMethodName() != null) {
 			return instantiateUsingFactoryMethod(beanName, mbd, args);
 		}
@@ -1146,6 +1151,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		boolean autowireNecessary = false;
 		if (args == null) {
 			synchronized (mbd.constructorArgumentLock) {
+				//如果已经解析过了就直接到resolvedConstructorOrFactoryMethod取出
 				if (mbd.resolvedConstructorOrFactoryMethod != null) {
 					resolved = true;
 					autowireNecessary = mbd.constructorArgumentsResolved;
@@ -1154,8 +1160,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		if (resolved) {
 			if (autowireNecessary) {
+				//构造函数自动注入
 				return autowireConstructor(beanName, mbd, null, null);
 			} else {
+				//默认构造函数
 				return instantiateBean(beanName, mbd);
 			}
 		}
@@ -1164,6 +1172,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
 				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {
+			//构造函数自动注入
 			return autowireConstructor(beanName, mbd, ctors, args);
 		}
 
