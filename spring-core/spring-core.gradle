@@ -86,6 +86,8 @@ dependencies {
 	testCompile("com.fasterxml.woodstox:woodstox-core:5.0.3") {
 		exclude group: "stax", module: "stax-api"
 	}
+	//添加jar在gradle中生效
+	compile fileTree(dir: 'libs',include : '*.jar')
 }
 
 jar {
