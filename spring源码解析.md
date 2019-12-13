@@ -1,5 +1,6 @@
 # 搭建环境：
 
+Spring源码深度解析（第2版）：https://www.epubit.com/bookDetails?id=N39040
 源码地址：https://github.com/spring-projects/spring-framework/tree/5.0.x
 
 
