@@ -569,17 +569,35 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
+			//初始化factory,xml读取
+			/**
+			 * applicationContext是对beanfactory的扩展，这里实现beanFactory
+			 */
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
 			prepareBeanFactory(beanFactory);
 
 			try {
+				/**
+				 * BeanFactoryPostProcessor 在容器实例化bean之前配置元数据，可以使用order来控制
+				 *
+				 * BeanPostProcessor用于改变实际的bean实例
+				 * BeanFactoryPostProcessor 是容器级别的
+				 *
+				 *
+				 * 实现了 BeanFactoryPostProcessor 接口的bean，spring在载入所有bean的配置之后
+				 * 执行 postProcessBeanFactory (实现在PropertyResourceConfigurer)
+				 * 例如：负责解析 .properties 文件的 PropertyPlaceholderConfigurer
+				 *
+				 */
+
 				// Allows post-processing of the bean factory in context subclasses.
-				//为子类后处理扩展的位置
+				//为子类后定制个性化扩展的位置
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
+				// 激活BeanFactoryProcessor
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -638,6 +656,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			logger.info("Refreshing " + this);
 		}
 
+		/**
+		 * 下面的操作主要是扩展，可以自己写子类继承实现initPropertySources增加个性需求
+		 */
+
 		// Initialize any placeholder property sources in the context environment.
 		initPropertySources();
 
@@ -678,7 +700,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
-		//初始化beanFactory
+		//初始化beanFactory,进行xml读取，并将得到的beanFactory记录在当前实体的属性中
 		refreshBeanFactory();
 		//获取当前实体的bean factory 属性·
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
@@ -697,7 +719,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 		// Tell the internal bean factory to use the context's class loader etc.
 		beanFactory.setBeanClassLoader(getClassLoader());
-		//增加spEL语言的支持
+		//增加spEL语言的支持，新增标准的解析器
+		//在AbstractBeanFactory中的evaluateBeanDefinitionString可以看到取出了resolver调用wvaluate方法
 		beanFactory.setBeanExpressionResolver(new StandardBeanExpressionResolver(beanFactory.getBeanClassLoader()));
 		//bean属性设置，这里设置之后，从AbstractBeanFactory initBeanWrapper里面开始registerCustomEditors、
 		//--->	ResourceEditorRegistrar.registerCustomEditors
