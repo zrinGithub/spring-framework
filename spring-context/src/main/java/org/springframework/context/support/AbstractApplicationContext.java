@@ -576,11 +576,15 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			/**
+			 * 配置 beanFactory 的扩展属性
+			 */
 			prepareBeanFactory(beanFactory);
 
 			try {
 				/**
-				 * BeanFactoryPostProcessor 在容器实例化bean之前配置元数据，可以使用order来控制
+				 * BeanFactoryPostProcessor 在容器实例化bean之前配置元数据，
+				 * 可以使用 order 属性来控制先后顺序（必须要实现Ordered接口）
 				 *
 				 * BeanPostProcessor用于改变实际的bean实例
 				 * BeanFactoryPostProcessor 是容器级别的
@@ -719,12 +723,18 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 		// Tell the internal bean factory to use the context's class loader etc.
 		beanFactory.setBeanClassLoader(getClassLoader());
-		//增加spEL语言的支持，新增标准的解析器
-		//在AbstractBeanFactory中的evaluateBeanDefinitionString可以看到取出了resolver调用wvaluate方法
+		//增加spEL语言的支持（如#{bean.xxx}），新增标准的解析器
+		//在 AbstractBeanFactory 中的 evaluateBeanDefinitionString 可以看到取出了 resolver 调用 valuate 方法
 		beanFactory.setBeanExpressionResolver(new StandardBeanExpressionResolver(beanFactory.getBeanClassLoader()));
 		//bean属性设置，这里设置之后，从AbstractBeanFactory initBeanWrapper里面开始registerCustomEditors、
 		//--->	ResourceEditorRegistrar.registerCustomEditors
-		//实际上beanWrapper继承了PropertyEditorRegistrySupport，里面createDefaultEditors 包含了spring实现的属性编辑器
+		//实际上 beanWrapper 继承了 PropertyEditorRegistrySupport ，里面 createDefaultEditors 包含了spring实现的属性编辑器
+
+		/**
+		 * 一般来说，设定自定义的属性编辑器：
+		 * 1.可以继承 PropertyEditorSupport ,配置在 CustomEditorConfigurer 中的 customEditors 中 ，
+		 * 2.可以继承 PropertyEditorRegistrar ,配置在 CustomEditorConfigurer 中的 propertyEditorRegistrars 中，
+		 */
 		beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, getEnvironment()));
 
 		// Configure the bean factory with context callbacks.
@@ -742,14 +752,18 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 		// BeanFactory interface not registered as resolvable type in a plain factory.
 		// MessageSource registered (and found for autowiring) as a bean.
-		//自动装配的特殊规则
+		//自动装配的特殊规则,AbstractApplicationContext 自己实现了ResourceLoader、ApplicationEventPublisher、ApplicationContext接口
+		//属性注入的时候，会把对应的参数注入
 		beanFactory.registerResolvableDependency(BeanFactory.class, beanFactory);
 		beanFactory.registerResolvableDependency(ResourceLoader.class, this);
 		beanFactory.registerResolvableDependency(ApplicationEventPublisher.class, this);
 		beanFactory.registerResolvableDependency(ApplicationContext.class, this);
 
 		// Register early post-processor for detecting inner beans as ApplicationListeners.
-		//后处理
+		/**
+		 * 后处理，加入到 beanPostProcessors 属性中
+		 * 参数实现 BeanPostProcessor 接口
+		 */
 		beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found.
