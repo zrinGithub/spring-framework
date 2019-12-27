@@ -432,4 +432,9 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 		}
 	}
 
+	private void test(){
+		addBasenames();
+		this.addBasenames();
+	}
+
 }

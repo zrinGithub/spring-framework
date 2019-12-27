@@ -399,3 +399,9 @@ BeanDefinitionParserDelegate.**parseBeanDefinitionElement**()
 
 用于存储在创建Bean早期对创建的原始bean的一个引用，注意这里是原始bean，即使用工厂方法或构造方法创建出来的对象，一旦对象最终创建好，此引用信息将删除
 
+
+
+
+
+# AOP
+
